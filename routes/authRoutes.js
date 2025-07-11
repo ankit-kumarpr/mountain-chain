@@ -16,5 +16,6 @@ router.post('/login', LoginAnyUser);
 router.post('/set-password/:email', SetPassword);
 router.post('/resend-email/:email', ResendEmailToAnyRole);
 router.delete('/delete-user/:id', protect, authorizeRoles('Admin'), DeleteAnyUser);
+router.get('/getusers',protect, authorizeRoles('Admin'), GetAllUserList);
 
 module.exports = router;
