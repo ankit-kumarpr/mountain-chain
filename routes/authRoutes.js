@@ -6,7 +6,8 @@ const {
   SetPassword,
   ResendEmailToAnyRole,
   LoginAnyUser,
-  DeleteAnyUser
+  DeleteAnyUser,
+  GetAllUserList  
 } = require('../controllers/authController');
 const { protect, authorizeRoles } = require('../middleware/authMiddleware');
 
