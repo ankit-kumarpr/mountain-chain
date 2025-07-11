@@ -214,6 +214,33 @@ const DeleteAnyUser = async (req, res) => {
   }
 };
 
+// get all user list
+
+const GetAllUserList=async(req,res)=>{
+  try{
+
+    const userlist=await User.find().select('-password');
+    if(!userlist || userlist.length===0){
+      return res.status(404).json({
+        success:false,
+        message:"Not any user register"
+      })
+    }
+
+    return res.status(200).json({
+      success:true,
+      message:"Users List",
+      data:userlist
+    })
+  }
+  catch(error){
+    return res.status(500).json({
+      success:false,
+      message:"Internal server error"
+    })
+  }
+}
+
 module.exports = {
   RegisterAdmin,
   RegisterotherRoles,
@@ -221,4 +248,5 @@ module.exports = {
   ResendEmailToAnyRole,
   LoginAnyUser,
   DeleteAnyUser,
+  GetAllUserList
 };
