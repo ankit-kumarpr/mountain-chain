@@ -55,7 +55,7 @@ const RegisterotherRoles = async (req, res) => {
       path.join(__dirname, "../Mailtemplate/setPasswordTemplate.html"),
       "utf-8"
     );
-    const link = `${process.env.CLIENT_URL}/set-password/${email}`;
+    const link = `${process.env.CLIENT_URL}/carete-user/${email}`;
     console.log("link", link);
     const mailContent = html
       .replace("{{name}}", name)
