@@ -55,7 +55,7 @@ const RegisterotherRoles = async (req, res) => {
       path.join(__dirname, "../Mailtemplate/setPasswordTemplate.html"),
       "utf-8"
     );
-    const link = `http://localhost:5173/carete-user/${email}`;
+    const link = `${process.env.CLIENT_URL}/set-password/${email}`;
     console.log("link", link);
     const mailContent = html
       .replace("{{name}}", name)
@@ -214,6 +214,7 @@ const DeleteAnyUser = async (req, res) => {
   }
 };
 
+
 // get all user list
 
 const GetAllUserList=async(req,res)=>{
@@ -240,6 +241,9 @@ const GetAllUserList=async(req,res)=>{
     })
   }
 }
+
+
+
 
 module.exports = {
   RegisterAdmin,

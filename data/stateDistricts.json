@@ -1,0 +1,47 @@
+{
+  "Uttar Pradesh": [
+    "Lucknow", "Kanpur", "Unnao", "Varanasi", "Agra", "Ayodhya", "Mathura", "Noida", "Ghaziabad", "Meerut", "Prayagraj", "Jhansi", "Aligarh"
+  ],
+  "Rajasthan": [
+    "Jaipur", "Jodhpur", "Udaipur", "Bikaner", "Ajmer", "Kota", "Pushkar", "Mount Abu", "Chittorgarh"
+  ],
+  "Kerala": [
+    "Kochi", "Thiruvananthapuram", "Alappuzha", "Munnar", "Kozhikode", "Wayanad", "Varkala", "Kumarakom", "Thekkady"
+  ],
+  "Himachal Pradesh": [
+    "Shimla", "Manali", "Dharamshala", "Dalhousie", "Kullu", "Chamba", "Spiti", "Solan", "Bilaspur"
+  ],
+  "Sikkim-Darjeeling": [
+    "Gangtok", "Darjeeling", "Pelling", "Namchi", "Kalimpong", "Lachung", "Yuksom"
+  ],
+  "North East": [
+    "Shillong", "Guwahati", "Tawang", "Imphal", "Aizawl", "Kohima", "Agartala", "Itanagar", "Majuli"
+  ],
+  "Delhi": [
+    "New Delhi", "Old Delhi", "South Delhi", "Connaught Place", "Dwarka", "Rohini", "Lajpat Nagar"
+  ],
+  "Uttarakhand": [
+    "Dehradun", "Nainital", "Haridwar", "Rishikesh", "Mussoorie", "Jim Corbett", "Almora", "Badrinath", "Kedarnath"
+  ],
+  "Ladakh": [
+    "Leh", "Kargil", "Nubra Valley", "Pangong Lake", "Tso Moriri", "Zanskar Valley", "Diskit"
+  ],
+  "Madhya Pradesh": [
+    "Bhopal", "Indore", "Ujjain", "Gwalior", "Jabalpur", "Khajuraho", "Pachmarhi", "Sanchi", "Bandhavgarh"
+  ],
+  "Gujarat": [
+    "Ahmedabad", "Surat", "Vadodara", "Rajkot", "Gandhinagar", "Kutch", "Dwarka", "Somnath", "Saputara"
+  ],
+  "Karnataka": [
+    "Bangalore", "Mysore", "Hampi", "Coorg", "Chikmagalur", "Gokarna", "Mangalore", "Hubli", "Badami"
+  ],
+  "West Bengal": [
+    "Kolkata", "Siliguri", "Darjeeling", "Digha", "Kalimpong", "Sundarbans", "Asansol", "Howrah"
+  ],
+  "Chhattisgarh": [
+    "Raipur", "Bilaspur", "Jagdalpur", "Durg", "Bastar", "Korba", "Rajnandgaon", "Ambikapur"
+  ],
+  "Odisha": [
+    "Bhubaneswar", "Cuttack", "Puri", "Konark", "Chilika", "Sambalpur", "Rourkela", "Berhampur"
+  ]
+}
