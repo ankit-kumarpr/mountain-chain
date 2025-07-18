@@ -16,4 +16,8 @@ app.use('/mountainchain/api/',authRoutes);
 app.use('/mountainchain/api/destination/',destinationrRoutes);
 app.use('/mountainchain/api/hotel/',hotelRoutes);
 
+app.get("/", (req, res) => {
+  res.send("MountainChain API is running.");
+});
+
 module.exports = app;
