@@ -89,7 +89,7 @@ const hotelSchema = new mongoose.Schema({
   childrenAgeRangeMin: Number,
   childrenAgeRangeMax: Number,
 
-  // Dynamic destination references
+  // Dynamics destination references
   tripDestinations: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Destination'

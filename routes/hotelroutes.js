@@ -10,8 +10,8 @@ const {
 } = require("../controllers/hotelController");
 const { protect, authorizeRoles } = require("../middleware/authMiddleware");
 
-router.post("/hotels", CreateNewHotel);
-router.get("/hotels", GelallHotelList);
+router.post("/addhotel", CreateNewHotel);
+router.get("/gethotels", GelallHotelList);
 router.get("/hotels/:id", GelSingleHotel);
 router.put("/hotels/:id", UpdateAnyHotel);
 router.delete("/hotels/:id", DeleteAnyhotel);
