@@ -9,7 +9,7 @@ const CreateNewHotel=async(req,res)=>{
     await hotel.save();
     res.status(201).json({ 
         success:true,
-        message: 'Hotel have been created',
+        message: 'Hotel HAVE created',
          hotel 
         });
     }

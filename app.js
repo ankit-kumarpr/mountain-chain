@@ -6,6 +6,8 @@ const app = express();
 const authRoutes=require('./routes/authRoutes');
 const destinationrRoutes=require('./routes/destinationRoutes');
 const hotelRoutes = require('./routes/hotelroutes');
+const cityRoutes = require('./routes/cityRoutes');
+const transportServiceRoutes = require('./routes/transportServiceRoutes');
 connectToDb(); 
 
 app.use(cors());
@@ -15,9 +17,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/mountainchain/api/',authRoutes);
 app.use('/mountainchain/api/destination/',destinationrRoutes);
 app.use('/mountainchain/api/hotel/',hotelRoutes);
-
-app.get("/", (req, res) => {
-  res.send("MountainChain API is running.");
-});
-
+app.use('/mountainchain/api/city/',cityRoutes);
+app.use('/mountainchain/api/transport/',transportServiceRoutes);
 module.exports = app;
