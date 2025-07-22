@@ -1,0 +1,6 @@
+fromCity,toCity,shortCode,tripDestinations,serviceName,serviceCode,distanceKm,startTime,durationMinutes,itinerary.title,itinerary.description
+Delhi,Manali,DL-MNL,"Kullu, Naggar",Deluxe Bus,DLM001,540,07:00 AM,600,Scenic Mountain Route,A comfortable ride from Delhi to Manali through Kullu Valley
+Manali,Shimla,MNL-SML,"Kullu, Mandi",Volvo Express,MNL001,250,09:00 AM,300,Snow Valley Tour,Enjoy scenic views on your way to Shimla
+Mumbai,Pune,MB-PN,Lonavala,SuperFast Bus,MBP001,150,06:30 AM,180,Express Route,Fastest route via Expressway
+Bangalore,Mysore,BLR-MSR,Mandya,Comfort Coach,BLR001,160,08:00 AM,210,Palace Express,Comfortable coach with reclining seats
+Chandigarh,Amritsar,CHD-AMS,Jalandhar,Golden Route,CHD001,230,05:00 AM,240,Religious Tour,Direct service to Golden Temple

@@ -1,5 +1,35 @@
 // controllers/transportServiceController.js
 const TransportService = require('../models/TransportService');
+const fs = require('fs');
+const csv = require('csv-parser');
+
+
+
+exports.uploadTransportServicesCSV = async (req, res) => {
+  try {
+    const services = [];
+
+    fs.createReadStream(req.file.path)
+      .pipe(csv())
+      .on('data', (row) => {
+        // Validate and push each row
+        services.push(row);
+      })
+      .on('end', async () => {
+        try {
+          const inserted = await TransportService.insertMany(services);
+          fs.unlinkSync(req.file.path); // cleanup file
+          return res.status(201).json({ success: true, message: 'Bulk transport services uploaded', data: inserted });
+        } catch (dbErr) {
+          console.error(dbErr);
+          return res.status(500).json({ success: false, message: 'Failed to insert CSV data' });
+        }
+      });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ success: false, message: 'CSV upload failed' });
+  }
+};
 
 // Create a new transport service
 exports.createTransportService = async (req, res) => {

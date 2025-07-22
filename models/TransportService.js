@@ -35,12 +35,16 @@ const transportServiceSchema = new mongoose.Schema({
     default: 0
   },
   startTime: {
-    type: String, // e.g., '08:00 AM'
+    type: String,
     trim: true
   },
   durationMinutes: {
     type: Number,
     default: 60
+  },
+  price: {
+    type: Number,
+    required: true
   },
   itinerary: {
     title: {
@@ -52,5 +56,6 @@ const transportServiceSchema = new mongoose.Schema({
     }
   }
 }, { timestamps: true });
+
 
 module.exports = mongoose.model('TransportService', transportServiceSchema);
