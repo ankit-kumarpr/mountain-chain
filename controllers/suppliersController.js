@@ -9,7 +9,7 @@ const Supplier = require('../models/Supplier');
  */
 const createSupplier = async (req, res) => {
   try {
-    // Destructure the expected fields from the request body
+    // Destructure all expected fields from the request body
     const {
       supplierType,
       companyName,
@@ -19,7 +19,7 @@ const createSupplier = async (req, res) => {
       cabName,
       cabType,
       numberOfSeater,
-      tripDestinations 
+      tripDestinations // This is a top-level field
     } = req.body;
 
     // --- Data Validation ---
@@ -30,26 +30,24 @@ const createSupplier = async (req, res) => {
       });
     }
 
-    // --- Structure the data to match the model ---
-    // The model expects contacts to be an array of objects
+    // --- Correctly Structure Data for Mongoose Model ---
     const supplierData = {
       supplierType,
       companyName,
       contacts: [{
         contactName,
         contactPhone,
-        contactEmail, // This is optional
+        contactEmail,
       }],
-      cabDetails: {
+      cabDetails: { // Nest cab-specific fields
         cabName,
         cabType,
         numberOfSeater,
-         tripDestinations,
       },
+      tripDestinations, // This should be at the root level, not inside cabDetails
       // createdBy: req.user.id, // Example if you have user authentication
     };
 
-    // Create a new supplier instance and save it to the database
     const newSupplier = new Supplier(supplierData);
     await newSupplier.save();
 
@@ -58,9 +56,9 @@ const createSupplier = async (req, res) => {
       message: 'Supplier created successfully.',
       data: newSupplier,
     });
+
   } catch (error) {
     console.error('Error creating supplier:', error);
-    // Handle validation errors from Mongoose
     if (error.name === 'ValidationError') {
       return res.status(400).json({ success: false, message: error.message });
     }
@@ -75,7 +73,8 @@ const createSupplier = async (req, res) => {
  */
 const getAllSuppliers = async (req, res) => {
   try {
-    const suppliers = await Supplier.find({}) .populate('tripDestinations', 'name').sort({ createdAt: -1 }); // Sort by newest first
+    // Populate tripDestinations to get names instead of just IDs
+    const suppliers = await Supplier.find({}).populate('tripDestinations', 'name').sort({ createdAt: -1 });
     res.status(200).json({
       success: true,
       count: suppliers.length,
@@ -94,7 +93,8 @@ const getAllSuppliers = async (req, res) => {
  */
 const getSupplierById = async (req, res) => {
   try {
-    const supplier = await Supplier.findById(req.params.id) .populate('tripDestinations');
+    // Populate tripDestinations to get full objects for the edit form
+    const supplier = await Supplier.findById(req.params.id).populate('tripDestinations');
     if (!supplier) {
       return res.status(404).json({ success: false, message: 'Supplier not found' });
     }
@@ -112,10 +112,40 @@ const getSupplierById = async (req, res) => {
  */
 const updateSupplier = async (req, res) => {
     try {
+        const {
+            supplierType,
+            companyName,
+            contactName,
+            contactPhone,
+            contactEmail,
+            cabName,
+            cabType,
+            numberOfSeater,
+            tripDestinations
+        } = req.body;
+
+        // --- RESTRUCTURE THE FLAT PAYLOAD FROM FRONTEND ---
+        // Build an update object that matches the nested schema structure
+        const updateData = {
+            supplierType,
+            companyName,
+            // Use dot notation to update nested fields in arrays and objects
+            'contacts.0.contactName': contactName,
+            'contacts.0.contactPhone': contactPhone,
+            'contacts.0.contactEmail': contactEmail,
+            cabDetails: {
+                cabName,
+                cabType,
+                numberOfSeater,
+            },
+            tripDestinations
+        };
+        // ---------------------------------------------------
+
         const supplier = await Supplier.findByIdAndUpdate(
             req.params.id, 
-            req.body, 
-            { new: true, runValidators: true } // new: true returns the updated document
+            { $set: updateData }, // Use the restructured updateData object with $set
+            { new: true, runValidators: true, context: 'query' }
         );
 
         if (!supplier) {
