@@ -73,6 +73,11 @@ const supplierSchema = new mongoose.Schema({
     },
   },
 
+  // --- NEW: Dynamic Trip Destinations Field ---
+  tripDestinations: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Destination' // This 'ref' tells Mongoose which model to populate from
+  }],
   // Optional: A field to link the supplier to a user account if needed
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,

@@ -18,7 +18,8 @@ const createSupplier = async (req, res) => {
       contactEmail,
       cabName,
       cabType,
-      numberOfSeater
+      numberOfSeater,
+      tripDestinations 
     } = req.body;
 
     // --- Data Validation ---
@@ -43,6 +44,7 @@ const createSupplier = async (req, res) => {
         cabName,
         cabType,
         numberOfSeater,
+         tripDestinations,
       },
       // createdBy: req.user.id, // Example if you have user authentication
     };
@@ -73,7 +75,7 @@ const createSupplier = async (req, res) => {
  */
 const getAllSuppliers = async (req, res) => {
   try {
-    const suppliers = await Supplier.find({}).sort({ createdAt: -1 }); // Sort by newest first
+    const suppliers = await Supplier.find({}) .populate('tripDestinations', 'name').sort({ createdAt: -1 }); // Sort by newest first
     res.status(200).json({
       success: true,
       count: suppliers.length,
@@ -92,7 +94,7 @@ const getAllSuppliers = async (req, res) => {
  */
 const getSupplierById = async (req, res) => {
   try {
-    const supplier = await Supplier.findById(req.params.id);
+    const supplier = await Supplier.findById(req.params.id) .populate('tripDestinations');
     if (!supplier) {
       return res.status(404).json({ success: false, message: 'Supplier not found' });
     }
