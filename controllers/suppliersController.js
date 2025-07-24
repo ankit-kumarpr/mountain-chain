@@ -9,43 +9,30 @@ const Supplier = require('../models/Supplier');
  */
 const createSupplier = async (req, res) => {
   try {
-    // Destructure all expected fields from the request body
+    // Destructure the payload, expecting 'cabs' to be an array of objects
     const {
       supplierType,
       companyName,
-      contactName,
-      contactPhone,
-      contactEmail,
-      cabName,
-      cabType,
-      numberOfSeater,
-      tripDestinations // This is a top-level field
+      contacts, // Assuming frontend sends contacts as an array [{ contactName, ... }]
+      cabs,     // This is now an array: [{ cabName, cabType, ... }]
+      tripDestinations
     } = req.body;
 
     // --- Data Validation ---
-    if (!supplierType || !companyName || !contactName || !contactPhone) {
+    if (!supplierType || !companyName || !contacts || contacts.length === 0) {
       return res.status(400).json({
         success: false,
-        message: 'Missing required fields: supplierType, companyName, contactName, and contactPhone are required.',
+        message: 'Missing required fields: supplierType, companyName, and at least one contact are required.',
       });
     }
 
-    // --- Correctly Structure Data for Mongoose Model ---
+    // --- Structure Data for Mongoose Model ---
     const supplierData = {
       supplierType,
       companyName,
-      contacts: [{
-        contactName,
-        contactPhone,
-        contactEmail,
-      }],
-      cabDetails: { // Nest cab-specific fields
-        cabName,
-        cabType,
-        numberOfSeater,
-      },
-      tripDestinations, // This should be at the root level, not inside cabDetails
-      // createdBy: req.user.id, // Example if you have user authentication
+      contacts,
+      cabs, // Pass the cabs array directly
+      tripDestinations,
     };
 
     const newSupplier = new Supplier(supplierData);
@@ -73,7 +60,6 @@ const createSupplier = async (req, res) => {
  */
 const getAllSuppliers = async (req, res) => {
   try {
-    // Populate tripDestinations to get names instead of just IDs
     const suppliers = await Supplier.find({}).populate('tripDestinations', 'name').sort({ createdAt: -1 });
     res.status(200).json({
       success: true,
@@ -93,7 +79,6 @@ const getAllSuppliers = async (req, res) => {
  */
 const getSupplierById = async (req, res) => {
   try {
-    // Populate tripDestinations to get full objects for the edit form
     const supplier = await Supplier.findById(req.params.id).populate('tripDestinations');
     if (!supplier) {
       return res.status(404).json({ success: false, message: 'Supplier not found' });
@@ -112,39 +97,13 @@ const getSupplierById = async (req, res) => {
  */
 const updateSupplier = async (req, res) => {
     try {
-        const {
-            supplierType,
-            companyName,
-            contactName,
-            contactPhone,
-            contactEmail,
-            cabName,
-            cabType,
-            numberOfSeater,
-            tripDestinations
-        } = req.body;
-
-        // --- RESTRUCTURE THE FLAT PAYLOAD FROM FRONTEND ---
-        // Build an update object that matches the nested schema structure
-        const updateData = {
-            supplierType,
-            companyName,
-            // Use dot notation to update nested fields in arrays and objects
-            'contacts.0.contactName': contactName,
-            'contacts.0.contactPhone': contactPhone,
-            'contacts.0.contactEmail': contactEmail,
-            cabDetails: {
-                cabName,
-                cabType,
-                numberOfSeater,
-            },
-            tripDestinations
-        };
-        // ---------------------------------------------------
+        // The frontend should send the complete, updated supplier object, including the full 'cabs' array.
+        // This makes the update logic much simpler and more robust.
+        const updateData = req.body;
 
         const supplier = await Supplier.findByIdAndUpdate(
             req.params.id, 
-            { $set: updateData }, // Use the restructured updateData object with $set
+            updateData, // Pass the entire body, which should include the updated 'cabs' array
             { new: true, runValidators: true, context: 'query' }
         );
 
