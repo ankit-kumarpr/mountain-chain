@@ -4,8 +4,16 @@ const path = require('path');
 const fs = require('fs');
 
 // Register new hotel (single)
+// controllers/hotelController.js
+
 const CreateNewHotel = async (req, res) => {
   try {
+    // --- DEBUGGING STEP ---
+    // Log the entire request body to your terminal.
+    console.log("--- Data received for new hotel ---");
+    console.log(JSON.stringify(req.body, null, 2)); // Use JSON.stringify for clean output
+    // ----------------------
+
     const hotel = new Hotel(req.body);
     await hotel.save();
     res.status(201).json({
@@ -14,6 +22,8 @@ const CreateNewHotel = async (req, res) => {
       hotel
     });
   } catch (error) {
+    // Also log the error for more details
+    console.error("Error creating hotel:", error.message); 
     return res.status(500).json({
       success: false,
       message: "Internal server error",

@@ -53,8 +53,10 @@ const roomSchema = new mongoose.Schema({
   }],
   allowedExtraBeds: Number,
   AWEB: Number,
+  BasePrice: Number,
   CWEB: Number,
-  CNB: Number,
+  CWoEB: Number,
+personPerRoom: Number,
   numberOfRooms: Number
 }, { _id: false });
 
@@ -86,6 +88,7 @@ const hotelSchema = new mongoose.Schema({
 
   checkinTime: String,
   checkoutTime: String,
+  
   childrenAgeRangeMin: Number,
   childrenAgeRangeMax: Number,
 
