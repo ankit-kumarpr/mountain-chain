@@ -7,6 +7,7 @@ GetalltripQuery,
 UpdateQueryDataOrStatus,
 AddfollowUp,
 GetAllfollowUps,
+GetSingleQuery,
 UpdateFolloqUpOfQuery
 } = require('../controllers/destinationController');
 const { protect, authorizeRoles } = require('../middleware/authMiddleware');
@@ -28,7 +29,7 @@ router.delete('/delsource/:id',protect, authorizeRoles('Admin'), DeleteTripSourc
 router.post('/addnewquery',protect, authorizeRoles('Admin'),AddNewQuery);
 router.get('/getallquerys',GetalltripQuery);
 router.post('/updatequery/:id',UpdateQueryDataOrStatus);
-
+router.get("/getquery/:id", protect, GetSingleQuery);
 
 // follow ups routes
   

@@ -470,6 +470,34 @@ const GetalltripQuery = async (req, res) => {
   }
 };
 
+
+// Get a single trip query by its ID
+const GetSingleQuery = async (req, res) => {
+  try {
+    const query = await TripQuery.findById(req.params.id)
+      .populate("destination", "name country")
+      .populate("querySource")
+      .populate("createdBy", "name email")
+      .populate("salesTeam", "name email");
+
+    if (!query) {
+      return res.status(404).json({
+        success: false,
+        message: "Query not found",
+      });
+    }
+    
+    res.status(200).json(query); // Send the single query object directly
+
+  } catch (error) {
+    console.error("GetSingleQuery Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
 // update query status or anything else
 
 const UpdateQueryDataOrStatus = async (req, res) => {
@@ -643,6 +671,7 @@ module.exports = {
   DeleteTripSource,
   AddNewQuery,
   GetalltripQuery,
+  GetSingleQuery,
   UpdateQueryDataOrStatus,
   GetAllfollowUps,
   AddfollowUp,
