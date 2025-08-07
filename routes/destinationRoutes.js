@@ -6,6 +6,7 @@ AddNewQuery,
 GetalltripQuery,
 UpdateQueryDataOrStatus,
 AddfollowUp,
+convertTripQuery,
 GetAllfollowUps,
 GetSingleQuery,
 UpdateFolloqUpOfQuery
@@ -30,6 +31,7 @@ router.post('/addnewquery',protect, authorizeRoles('Admin'),AddNewQuery);
 router.get('/getallquerys',GetalltripQuery);
 router.post('/updatequery/:id',UpdateQueryDataOrStatus);
 router.get("/getquery/:id", protect, GetSingleQuery);
+router.post("/query/:queryId/convert", protect, convertTripQuery);
 
 // follow ups routes
   

@@ -1,135 +1,74 @@
-const ejs = require("ejs");
-const puppeteer = require("puppeteer");
-const path = require("path");
-const fs = require("fs");
-
-const formatCurrency = (amount) =>
-  amount ? `₹${Number(amount).toLocaleString("en-IN")}` : "N/A";
-
-const formatDate = (date, options = { year: "numeric", month: "short", day: "numeric" }) => {
-  if (!date) return "N/A";
-  return new Date(date).toLocaleDateString("en-IN", options);
-};
-
-const createCoverPage = (quote) => {
-  const startDateFormatted = formatDate(quote.startDate, {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-  return `
-    <div class="cover-page">
-      <div class="cover-content">
-        <img src="https://via.placeholder.com/200x80?text=Your+Logo" alt="Company Logo" class="cover-logo"/>
-        <h1>${quote.queryId?.destination?.name ?? "Tour Quotation"}</h1>
-        <h2>${quote.queryId?.guestName ?? "Valued Guest"}</h2>
-        <p>Travel Dates: ${startDateFormatted}</p>
-        <p>Quotation ID: ${quote.quoteId}</p>
-        <p style="margin-top: 30px; font-size: 12px;">Mountains Chain Travel</p>
-      </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Quotation - <%= quote.quoteId %></title>
+    <style>
+        /* Your full CSS from the original template should be here */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+        body { font-family: 'Poppins', sans-serif; font-size: 11px; color: #3f3f46; }
+        .page { padding: 40px; }
+        h1, h2, h3 { color: #1e293b; margin: 10px 0; }
+        .section-header { background-color: #f1f5f9; padding: 10px; border-radius: 5px; margin-top: 20px; font-size: 14px; font-weight: bold; }
+        .itinerary-day { border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 10px; }
+        ul { padding-left: 20px; }
+        li { margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <!-- Robust check for nested properties -->
+        <h1><%= quote.queryId && quote.queryId.destination ? quote.queryId.destination.name : 'Tour' %> Tour Package</h1>
+        <h2>Dear <%= quote.queryId ? quote.queryId.guestName : 'Valued Guest' %>,</h2>
+        <p>Greetings from Mountains Chain Travel.</p>
+        <hr>
+        <h3>Total Price: <%= formatCurrency(quote.summary ? quote.summary.totalSellingPrice : 0) %></h3>
+        <hr>
     </div>
-  `;
-};
 
-const createHotelSection = (hotelDetails) => {
-  if (!hotelDetails?.entries?.length) return "<p>No hotel data provided.</p>";
-  return `
-    <div class="section">
-      <h3>Hotel Details</h3>
-      <ul>
-        ${hotelDetails.entries
-          .map(
-            (entry) => `
-            <li>
-              ${entry.hotelName || "Unnamed Hotel"} - ${entry.hotelId?.city || "Unknown City"}, ${entry.hotelId?.state || ""}
-              <br/>Rooms: ${entry.roomType || "N/A"} | Meal: ${entry.mealPlan || "N/A"}
-            </li>`
-          )
-          .join("")}
-      </ul>
+    <div class="page">
+        <!-- Hotels Section -->
+        <div class="section-header">Hotel Details</div>
+        <% if (quote.hotelDetails && quote.hotelDetails.entries && quote.hotelDetails.entries.length > 0) { %>
+            <ul>
+                <% quote.hotelDetails.entries.forEach(entry => { %>
+                    <li>
+                        <strong><%= entry.hotelName || 'N/A' %></strong> in <%= entry.hotelId ? entry.hotelId.city : 'N/A' %>, <%= entry.hotelId ? entry.hotelId.state : 'N/A' %>
+                        <br>
+                        <small>Nights: <%= entry.stayNights ? entry.stayNights.join(', ') : 'N/A' %> | Rooms: <%= entry.roomConfig || 'N/A' %> | Meal Plan: <%= entry.mealPlan || 'N/A' %></small>
+                    </li>
+                <% }); %>
+            </ul>
+        <% } else { %>
+            <p>No hotel details have been provided for this quote.</p>
+        <% } %>
+
+        <!-- Itinerary Section -->
+        <div class="section-header">Day Wise Itinerary</div>
+        <% if (quote.dayWiseItinerary && quote.dayWiseItinerary.length > 0) { %>
+            <% quote.dayWiseItinerary.forEach(day => { %>
+                <div class="itinerary-day">
+                    <strong>Day <%= day.day %>: <%= day.title %></strong>
+                    <p><%= day.description %></p>
+                </div>
+            <% }); %>
+        <% } else { %>
+            <p>No itinerary has been provided for this quote.</p>
+        <% } %>
+        
+        <!-- Inclusions/Exclusions Section -->
+        <div class="section-header">Inclusions & Exclusions</div>
+        <% if (quote.inclusionsExclusions && quote.inclusionsExclusions.length > 0) { %>
+             <% quote.inclusionsExclusions.forEach(item => { %>
+                <h4><%= item.category %></h4>
+                <strong>Inclusions:</strong>
+                <ul><% if(item.included) { item.included.split('\n').forEach(inc => { %><li><%= inc %></li><% }); } %></ul>
+                <strong>Exclusions:</strong>
+                <ul><% if(item.excluded) { item.excluded.split('\n').forEach(exc => { %><li><%= exc %></li><% }); } %></ul>
+             <% }); %>
+        <% } else { %>
+            <p>No inclusions or exclusions have been provided.</p>
+        <% } %>
     </div>
-  `;
-};
-
-const createItinerarySection = (dayWiseItinerary) => {
-  if (!Array.isArray(dayWiseItinerary) || dayWiseItinerary.length === 0)
-    return "<p>No itinerary provided.</p>";
-
-  return `
-    <div class="section">
-      <h3>Day Wise Itinerary</h3>
-      ${dayWiseItinerary
-        .map(
-          (day, index) => `
-        <div class="itinerary-day">
-          <strong>Day ${index + 1}:</strong> ${day.title || "Untitled"}
-          <p>${day.description || ""}</p>
-        </div>`
-        )
-        .join("")}
-    </div>
-  `;
-};
-
-const createInclusionsSection = (data = {}) => {
-  const { inclusions = [], exclusions = [], notes = [] } = data;
-
-  return `
-    <div class="section">
-      <h3>Inclusions & Exclusions</h3>
-      <div class="inclusions">
-        <strong>Inclusions:</strong>
-        <ul>${inclusions.map((item) => `<li>${item}</li>`).join("")}</ul>
-      </div>
-      <div class="exclusions">
-        <strong>Exclusions:</strong>
-        <ul>${exclusions.map((item) => `<li>${item}</li>`).join("")}</ul>
-      </div>
-      ${
-        notes?.length
-          ? `<div class="notes"><strong>Notes:</strong><ul>${notes.map(
-              (n) => `<li>${n}</li>`
-            )}</ul></div>`
-          : ""
-      }
-    </div>
-  `;
-};
-
-const createPdf = async (quote) => {
-  const templatePath = path.join(__dirname, "../templates/quotation.template.ejs");
-
-  const data = {
-    coverPage: createCoverPage(quote),
-    quoteId: quote.quoteId,
-    destination: quote.queryId?.destination?.name ?? "Tour",
-    guestName: quote.queryId?.guestName ?? "Valued Guest",
-    startDate: formatDate(quote.startDate),
-    duration: quote.duration ?? "N/A",
-    pax: `${quote.pax ?? "N/A"} Adults, ${quote.queryId?.childrenAges?.length ?? 0} Child(ren)`,
-    tripId: quote.queryId?.queryId ?? "N/A",
-    referenceId: quote.queryId?.referenceId ?? "N/A",
-    totalSellingPrice: formatCurrency(quote.summary?.totalSellingPrice),
-    hotelSection: createHotelSection(quote.hotelDetails),
-    itinerarySection: createItinerarySection(quote.dayWiseItinerary),
-    inclusionsExclusionsSection: createInclusionsSection(quote.inclusionsExclusions),
-  };
-
-  const html = await ejs.renderFile(templatePath, data);
-
-  const browser = await puppeteer.launch({ headless: "new" });
-  const page = await browser.newPage();
-
-  await page.setContent(html, { waitUntil: "domcontentloaded" });
-
-  const pdf = await page.pdf({
-    format: "A4",
-    printBackground: true,
-    margin: { top: "30px", bottom: "30px", left: "20px", right: "20px" },
-  });
-
-  await browser.close();
-  return pdf;
-};
-
-module.exports = { createPdf };
+</body>
+</html>

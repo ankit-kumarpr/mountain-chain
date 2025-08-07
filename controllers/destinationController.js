@@ -2,6 +2,7 @@ const Destination = require("../models/Destination");
 const stateDistricts = require("../data/stateDistricts.json");
 const TripSource = require("../models/TripSource");
 const TripQuery = require("../models/TripQuery");
+const Quotation = require('../models/quotation.js'); // ✅ ADD THIS LINE
 
 const generateShortName = (name) => {
   return name
@@ -10,8 +11,11 @@ const generateShortName = (name) => {
     .join("");
 };
 
-// add destination
 
+
+
+
+// add destination
 const addDestinations = async (req, res) => {
   try {
     const { destinations } = req.body;
@@ -474,20 +478,32 @@ const GetalltripQuery = async (req, res) => {
 // Get a single trip query by its ID
 const GetSingleQuery = async (req, res) => {
   try {
-    const query = await TripQuery.findById(req.params.id)
+    let query = TripQuery.findById(req.params.id)
       .populate("destination", "name country")
       .populate("querySource")
       .populate("createdBy", "name email")
       .populate("salesTeam", "name email");
 
-    if (!query) {
+    // ✅ CHECK FOR POPULATE QUERY PARAMETER
+    if (req.query.populate === 'convertedWithQuote') {
+        query = query.populate({
+            path: 'convertedWithQuote',
+            populate: { // You can even populate fields within the quote
+                path: 'createdBy hotelDetails.entries.hotelId'
+            }
+        });
+    }
+
+    const finalQuery = await query.exec();
+
+    if (!finalQuery) {
       return res.status(404).json({
         success: false,
         message: "Query not found",
       });
     }
     
-    res.status(200).json(query); // Send the single query object directly
+    res.status(200).json(finalQuery);
 
   } catch (error) {
     console.error("GetSingleQuery Error:", error);
@@ -657,7 +673,59 @@ const UpdateFolloqUpOfQuery=async(req,res)=>{
 
 
 
+const convertTripQuery = async (req, res) => {
+    const { queryId } = req.params;
+    const { quoteId, instalments, comments } = req.body;
 
+    if (!quoteId || !instalments) {
+        return res.status(400).json({ 
+            success: false, 
+            message: "Quotation ID and instalment plan are required." 
+        });
+    }
+
+    try {
+        const query = await TripQuery.findById(queryId);
+        if (!query) {
+            return res.status(404).json({ success: false, message: "Query not found" });
+        }
+        
+        const quote = await Quotation.findById(quoteId);
+        if (!quote) {
+            return res.status(404).json({ success: false, message: "Quotation not found" });
+        }
+
+        // 1. Update the Query document
+        query.status = 'Converted';
+        query.convertedWithQuote = quoteId;
+        query.instalments = instalments;
+
+        // Optionally, add a comment about the conversion
+        if (comments) {
+            query.comments = query.comments ? `${query.comments}\n\nConversion Note: ${comments}` : `Conversion Note: ${comments}`;
+        }
+        
+        const savedQuery = await query.save();
+
+        // 2. (Optional but recommended) Mark the quotation as converted
+        quote.isConverted = true; // You will need to add `isConverted: { type: Boolean, default: false }` to your Quotation schema for this.
+        await quote.save();
+
+        res.status(200).json({
+            success: true,
+            message: "Trip has been successfully converted!",
+            data: savedQuery
+        });
+
+    } catch (error) {
+        console.error("Trip Conversion Error:", error);
+        res.status(500).json({ 
+            success: false, 
+            message: "Internal server error during conversion.",
+            error: error.message 
+        });
+    }
+};
 
 
 
@@ -668,6 +736,7 @@ module.exports = {
   CreateTripSourse,
   GetTripSource,
   UpdateTripSource,
+  convertTripQuery,
   DeleteTripSource,
   AddNewQuery,
   GetalltripQuery,

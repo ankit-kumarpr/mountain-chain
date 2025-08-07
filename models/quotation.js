@@ -104,20 +104,18 @@ const QuotationSchema = new Schema({
         extraServices: [TransportExtraServiceSchema]
     },
 
-    // --- NEWLY ADDED FIELDS ---
     dayWiseItinerary: [DayWiseItinerarySchema],
     inclusionsExclusions: [InclusionExclusionSchema],
     termsAndConditions: [String], // Array of strings for each term
 
-    // Final pricing and summary details
     summary: {
         totalNetCost: Number,
         totalSellingPrice: Number,
-        // The following fields can be added from your frontend payload
         markup: { type: { type: String, enum: ['%', 'INR'] }, value: Number },
         gstPercentage: Number, // Renamed for clarity from `gst.value`
         finalPriceWithGst: Number, // Renamed for clarity from `finalPrice`
         internalRemarks: String,
+        subtotalWithMarkup: Number,
         customerRemarks: String
     },
 

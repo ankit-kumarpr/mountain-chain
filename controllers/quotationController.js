@@ -1,6 +1,6 @@
 const Quotation = require('../models/quotation.js');
 const { createPdf } = require('../services/pdfService.js');
-
+const TripQuery = require('../models/TripQuery.js');
 // Create a new Quotation
 exports.createQuotation = async (req, res) => {
     try {
@@ -10,7 +10,18 @@ exports.createQuotation = async (req, res) => {
             quoteId: quoteId,
             createdBy: req.user.id
         });
+
         const savedQuotation = await newQuotation.save();
+
+        // ✅ Update TripQuery status
+        if (req.body.queryId) {
+            await TripQuery.findByIdAndUpdate(
+                req.body.queryId,
+                { status: "In Progress" },
+                { new: true }
+            );
+        }
+
         res.status(201).json(savedQuotation);
     } catch (error) {
         console.error("Error in createQuotation:", error);
@@ -38,13 +49,13 @@ exports.getQuotationsByQuery = async (req, res) => {
             .sort({ createdAt: -1 })
             .lean();
         res.status(200).json(quotations);
-    } catch (error) { // <-- BRACE WAS MISSING HERE
+    } catch (error) {
         console.error("Error in getQuotationsByQuery:", error);
         res.status(500).json({ message: "Error fetching quotations for query", error: error.message });
     }
 };
 
-// Get a single Quotation
+// Get a single Quotation by its unique quoteId
 exports.getQuotation = async (req, res) => {
     try {
         const quotation = await Quotation.findOne({ quoteId: req.params.id })
@@ -63,12 +74,61 @@ exports.getQuotation = async (req, res) => {
     }
 };
 
-// Update a Quotation
+// ✅ COMPLETE AND CORRECTED updateQuotation function
 exports.updateQuotation = async (req, res) => {
     try {
-        const updatedQuotation = await Quotation.findOneAndUpdate({ quoteId: req.params.id }, req.body, { new: true });
-        if (!updatedQuotation) return res.status(404).json({ message: "Quotation not found" });
+        const quoteToUpdate = await Quotation.findOne({ quoteId: req.params.id });
+
+        if (!quoteToUpdate) {
+            return res.status(404).json({ message: "Quotation not found" });
+        }
+
+        const {
+            flights,
+            hotelDetails,
+            transportDetails,
+            dayWiseItinerary,
+            inclusionsExclusions,
+            termsAndConditions,
+            summary,
+        } = req.body;
+
+        // --- Server-side recalculation to ensure data integrity ---
+        const totalHotelCost = (hotelDetails?.entries?.reduce((acc, item) => {
+            const nights = item.stayNights?.length || 1;
+            return acc + (Number(item.sellingPrice) || 0) * nights;
+        }, 0) || 0) +
+        (hotelDetails?.specialInclusions?.reduce((acc, item) => acc + (Number(item.price) || 0), 0) || 0);
+
+        const totalTransportCost = (transportDetails?.entries?.reduce((acc, entry) => {
+            const numDays = entry.selectedDays?.length || 1;
+            const entryTotal = entry.transportItems?.reduce((itemAcc, item) => itemAcc + (Number(item.givenPrice) || 0) * (item.qty || 1), 0) || 0;
+            return acc + (entryTotal * numDays);
+        }, 0) || 0) +
+        (transportDetails?.extraServices?.reduce((acc, service) => acc + (Number(service.price) || 0), 0) || 0);
+
+        const totalFlightCost = flights?.reduce((acc, flight) => acc + (Number(flight.givenPrice) || 0), 0) || 0;
+        
+        const serverCalculatedTotalSelling = totalHotelCost + totalTransportCost + totalFlightCost;
+
+        // --- Update the document fields ---
+        quoteToUpdate.flights = flights;
+        quoteToUpdate.hotelDetails = hotelDetails;
+        quoteToUpdate.transportDetails = transportDetails;
+        quoteToUpdate.dayWiseItinerary = dayWiseItinerary;
+        quoteToUpdate.inclusionsExclusions = inclusionsExclusions;
+        quoteToUpdate.termsAndConditions = termsAndConditions;
+
+        // Update summary, but overwrite total with the reliable server-calculated value
+        if (summary) {
+            quoteToUpdate.summary = summary;
+            quoteToUpdate.summary.totalSellingPrice = serverCalculatedTotalSelling;
+        }
+
+        const updatedQuotation = await quoteToUpdate.save();
+
         res.status(200).json(updatedQuotation);
+
     } catch (error) {
         console.error("Error in updateQuotation:", error);
         res.status(500).json({ message: "Error updating quotation", error: error.message });
@@ -77,52 +137,42 @@ exports.updateQuotation = async (req, res) => {
 
 // Delete a Quotation
 exports.deleteQuotation = async (req, res) => {
-    res.status(501).json({ message: 'Not implemented' });
+    try {
+        const deleted = await Quotation.findOneAndDelete({ quoteId: req.params.id });
+        if (!deleted) return res.status(404).json({ message: "Quotation not found" });
+        res.status(200).json({ message: "Quotation deleted successfully" });
+    } catch (error) {
+        console.error("Error deleting quotation:", error);
+        res.status(500).json({ message: "Error deleting quotation", error: error.message });
+    }
 };
+
 
 // Generate and send PDF
 exports.generateQuotationPDF = async (req, res) => {
   try {
     const { id } = req.params;
-
     const quote = await Quotation.findOne({ quoteId: id })
-      .populate({
-        path: 'queryId',
-        populate: {
-          path: 'destination',
-          select: 'name'
-        }
-      })
-      .populate({
-        path: 'hotelDetails.entries.hotelId',
-        select: 'city state'
-      })
-      .lean(); // use lean() to return plain JS object
+      .populate({ path: 'queryId', populate: { path: 'destination', select: 'name' } })
+      .populate({ path: 'hotelDetails.entries.hotelId', select: 'city state' })
+      .lean();
 
     if (!quote) {
       return res.status(404).json({ message: "Quotation not found" });
     }
 
     const pdfBuffer = await createPdf(quote);
-
-    console.log('PDF Buffer Length:', pdfBuffer.length);
-
     res.set({
       "Content-Type": "application/pdf",
-      // Change to "inline" to allow preview in browser tab
       "Content-Disposition": `inline; filename="Quotation-${quote.quoteId}.pdf"`,
       "Content-Length": pdfBuffer.length,
     });
-
-    return res.send(pdfBuffer); // ✅ send raw buffer
+    return res.send(pdfBuffer);
   } catch (err) {
     console.error("PDF generation failed:", err);
     res.status(500).json({ message: "Failed to generate PDF", error: err.message });
   }
 };
-
-
-
 
 // Attach (copy) a quotation to a new query
 exports.attachQuotation = async (req, res) => {

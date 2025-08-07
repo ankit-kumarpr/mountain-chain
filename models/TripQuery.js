@@ -37,6 +37,21 @@ salesTeam: [{
     enum: ['New', 'In Progress', 'Converted', 'On Trip', 'Past Trips', 'Canceled', 'Dropped'],
     default: 'New'
   },
+  convertedWithQuote: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Quotation', // Reference to the quotation used for conversion
+    default: null
+  },
+  instalments: [{
+    amount: { type: Number, required: true },
+    dueDate: { type: Date, required: true },
+    status: {
+      type: String,
+      enum: ['Pending', 'Paid', 'Overdue'],
+      default: 'Pending'
+    }
+  }],
+  
    followUps: [
   {
     message: String,
