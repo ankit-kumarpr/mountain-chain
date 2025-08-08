@@ -114,7 +114,7 @@ const QuotationSchema = new Schema({
         markup: { type: { type: String, enum: ['%', 'INR'] }, value: Number },
         gstPercentage: Number, // Renamed for clarity from `gst.value`
         finalPriceWithGst: Number, // Renamed for clarity from `finalPrice`
-        internalRemarks: String,
+        internalRemarks: String, 
         subtotalWithMarkup: Number,
         customerRemarks: String
     },

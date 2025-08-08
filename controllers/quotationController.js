@@ -58,7 +58,8 @@ exports.getQuotationsByQuery = async (req, res) => {
 // Get a single Quotation by its unique quoteId
 exports.getQuotation = async (req, res) => {
     try {
-        const quotation = await Quotation.findOne({ quoteId: req.params.id })
+       
+        const quotation = await Quotation.findById(req.params.id)
             .populate({
                 path: 'queryId',
                 populate: { path: 'destination' }
@@ -66,9 +67,15 @@ exports.getQuotation = async (req, res) => {
             .populate('createdBy', 'name')
             .populate('hotelDetails.entries.hotelId', 'city state');
 
-        if (!quotation) return res.status(404).json({ message: "Quotation not found" });
+        if (!quotation) {
+            // This will now only trigger if the ID truly doesn't exist in the database
+            return res.status(404).json({ message: "Quotation not found" });
+        }
+        
         res.status(200).json(quotation);
+
     } catch (error) {
+        // This will catch errors like an invalid ID format
         console.error("Error in getQuotation:", error);
         res.status(500).json({ message: "Error fetching quotation", error: error.message });
     }
